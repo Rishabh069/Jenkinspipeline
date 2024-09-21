@@ -27,14 +27,16 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to Stagging Env') {
+        stage('Push Docker Image to Local Registry') {
             steps {
-                echo "Running app on stagging env"
-                sh '''
-                docker stop tomcatInstanceStaging || true
-                docker rm tomcatInstanceStaging || true
-                docker run -itd --name tomcatInstanceStaging -p 8082:8080 localtomcatimg:$BUILD_NUMBER
-                sh '''
+                script {
+                    echo "Starting Local Docker Registry"
+                    sh 'docker run -d -p 5000:5000 --restart=always --name registry registry:2'
+                    echo "Tagging the Docker image"
+                    sh "docker tag localtomcatimg:$BUILD_NUMBER localhost:5000/localtomcatimg:$BUILD_NUMBER"
+                    echo "Pushing the Docker image to Local Registry"
+                    sh "docker push localhost:5000/localtomcatimg:$BUILD_NUMBER"
+                }
             }
         }
     }
