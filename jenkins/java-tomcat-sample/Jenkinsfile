@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
     stages {
@@ -25,13 +24,8 @@ pipeline {
                 cd jenkins/java-tomcat-sample
                 docker build -t localtomcatimg:$BUILD_NUMBER .
                 cd $original_pwd
-                sh '''
+                '''
             }
         }
-
     }
-    
-
-
-
 }
