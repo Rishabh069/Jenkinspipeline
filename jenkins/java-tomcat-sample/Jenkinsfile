@@ -4,7 +4,6 @@ pipeline {
         scannerHome = tool 'sonar6.1'
     }
     stages {
-
         stage('Build') {
             steps {
                 sh 'mvn -f jenkins/java-tomcat-sample/pom.xml install -DskipTests'
@@ -17,3 +16,4 @@ pipeline {
             }
         }
     }
+}
