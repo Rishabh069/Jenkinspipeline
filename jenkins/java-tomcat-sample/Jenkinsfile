@@ -4,6 +4,7 @@ pipeline {
         scannerHome = tool 'sonar6.1'
     }
     stages {
+
         stage('Build') {
             steps {
                 sh 'mvn -f jenkins/java-tomcat-sample/pom.xml install -DskipTests'
@@ -12,6 +13,33 @@ pipeline {
                 success {
                     echo 'Now Archiving it...'
                     archiveArtifacts artifacts: '**/target/*.war'
+                }
+            }
+        }
+
+        stage('UNIT TEST') {
+            steps {
+                sh 'mvn -f jenkins/java-tomcat-sample/pom.xml test'
+            }
+        }
+
+        stage('Checkstyle Analysis') {
+            steps {
+                sh 'mvn -f jenkins/java-tomcat-sample/pom.xml checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh '''${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=java-tomcat-sample \
+                        -Dsonar.projectName="Java Tomcat Sample" \
+                        -Dsonar.projectVersion=4.0 \
+                        -Dsonar.sources=jenkins/java-tomcat-sample/src/main/java \
+                        -Dsonar.junit.reportsPath=jenkins/java-tomcat-sample/target/surefire-reports \
+                        -Dsonar.jacoco.reportPaths=jenkins/java-tomcat-sample/target/jacoco.exec \
+                        -Dsonar.java.checkstyle.reportPaths=jenkins/java-tomcat-sample/target/checkstyle-result.xml'''
                 }
             }
         }
