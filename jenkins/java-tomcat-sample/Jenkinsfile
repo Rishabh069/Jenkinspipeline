@@ -31,16 +31,34 @@ pipeline {
 
         stage('Sonar Analysis') {
             steps {
-                withSonarQubeEnv('sonar6.1') {
-                    sh '''${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=java-tomcat-sample \
-                        -Dsonar.projectName="Java Tomcat Sample" \
+                withSonarQubeEnv('sonar') {
+                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=java-tomcat-sample \
+                        -Dsonar.projectName=java-tomcat-sample \
                         -Dsonar.projectVersion=4.0 \
-                        -Dsonar.sources=jenkins/java-tomcat-sample/src/main/java \
-                        -Dsonar.junit.reportsPath=jenkins/java-tomcat-sample/target/surefire-reports \
-                        -Dsonar.jacoco.reportPaths=jenkins/java-tomcat-sample/target/jacoco.exec \
-                        -Dsonar.java.checkstyle.reportPaths=jenkins/java-tomcat-sample/target/checkstyle-result.xml'''
+                        -Dsonar.sources=jenkins/java-tomcat-sample/src/ \
+                        -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
                 }
+            }
+        }
+        stage("UploadArtifact") {
+            steps {
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: '172.31.53.216:8081',
+                    groupId: 'QA',
+                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                    repository: 'devops-morning-app',
+                    credentialsId: 'nexusloincredentials',
+                    artifacts: [
+                        [artifactId: 'java-tomcat-sample',
+                         classifier: '',
+                         file: 'jenkins/java-tomcat-sample/target/java-tomcat-maven-example.war',
+                         type: 'war']
+                    ]
+                )
             }
         }
     }
